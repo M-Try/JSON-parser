@@ -34,7 +34,7 @@ int advance(parser_state *ps, char maybe_next) {
 
 void create_json_ent(parser_state *ps) {
     struct json_ent *newent = new(struct json_ent);
-    ps->json_head->next = newent;
+    ps->json_head->next = (uint64_t) newent;
     ps->json_head = newent;
 }
 
@@ -46,23 +46,19 @@ void parse_whitespace(parser_state *ps) {
 }
 
 int parse_bool_null(parser_state *ps) {
-    dbg_print("parse_bool_null called");
     if (strncmp(ps->head, "true", 4) == 0) {
         ps->json_head->val.type = JSON_BOOL;
         ps->json_head->val.value = 1;
-        dbg_print("parse_bool_null found true");
         return SEQUENCE_FOUND;
     }
     if (strncmp(ps->head, "false", 5) == 0) {
         ps->json_head->val.type = JSON_BOOL;
         ps->json_head->val.value = 0;
-        dbg_print("parse_bool_null found false");
         return SEQUENCE_FOUND;
     }
     if (strncmp(ps->head, "null", 4) == 0) {
         ps->json_head->val.type = JSON_NULL;
         ps->json_head->val.value = 0;
-        dbg_print("parse_bool_null found null");
         return SEQUENCE_FOUND;
     }
 
@@ -70,7 +66,6 @@ int parse_bool_null(parser_state *ps) {
 }
 
 int parse_number(parser_state *ps) {
-    dbg_print("parse_number called");
     size_t len = strcspn(ps->head, ",}]");
     if (len == NULL) {
         return SEQUENCE_NOT_FOUND;
@@ -86,7 +81,6 @@ int parse_number(parser_state *ps) {
 }
 
 int parse_string(parser_state *ps) {
-    dbg_print("parse_string called");
     if (!advance(ps, '"')) return SEQUENCE_NOT_FOUND;
     
     // TODO: check for malformed strings!!!!!
@@ -110,12 +104,8 @@ int parse_string(parser_state *ps) {
 int parse_value(parser_state *ps);
 
 int parse_object(parser_state *ps) {
-    dbg_print("parse_object called");
     if (!advance(ps, '{')) return SEQUENCE_NOT_FOUND;
-    dbg_print("in parse_object, advanced past initial LCURLY");
     parse_whitespace(ps);
-
-    dbg_print("in parse_object, parsed initial whitespace");
 
     struct json_ent *orig_ent = ps->json_head;
 
@@ -147,7 +137,6 @@ int parse_object(parser_state *ps) {
 }
 
 int parse_array(parser_state *ps) {
-    dbg_print("parse_array called");
     if (!advance(ps, '[')) return SEQUENCE_NOT_FOUND;
     parse_whitespace(ps);
 
@@ -174,13 +163,15 @@ int parse_array(parser_state *ps) {
 }
 
 int parse_value(parser_state *ps) {
-    dbg_print("parse_value called");
     ps->mode = PM_VALUE;
-    if (parse_object(ps)) return SEQUENCE_FOUND;
-    if (parse_array(ps)) return SEQUENCE_FOUND;
-    if (parse_bool_null(ps)) return SEQUENCE_FOUND;
-    if (parse_string(ps)) return SEQUENCE_FOUND;
-    if (parse_number(ps)) return SEQUENCE_FOUND;
+    if (
+        parse_object(ps) ||
+        parse_array(ps) ||
+        parse_bool_null(ps) ||
+        parse_string(ps) ||
+        parse_number(ps)
+    ) return SEQUENCE_FOUND;
+
     return SEQUENCE_NOT_FOUND;
 }
 
@@ -193,7 +184,10 @@ struct json_ent *parse_json(char *text) {
     ps->json_head = ent;
     ps->mode = PM_STRINGKEY;
 
+    // do the actual parsing
+    ps->json_begin->name = ""; // empty string because the global scope object doesnt have a string key
     int parser_status = parse_object(ps);
+
     free(ps);
     ps->json_head->next = NULL;
 
