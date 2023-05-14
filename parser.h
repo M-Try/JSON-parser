@@ -188,8 +188,8 @@ struct json_ent *parse_json(char *text) {
     ps->json_begin->name = ""; // empty string because the global scope object doesnt have a string key
     int parser_status = parse_object(ps);
 
-    free(ps);
     ps->json_head->next = NULL;
+    free(ps);
 
     if (parser_status == SEQUENCE_NOT_FOUND) {
         free(ent);
