@@ -49,16 +49,22 @@ int parse_bool_null(parser_state *ps) {
     if (strncmp(ps->head, "true", 4) == 0) {
         ps->json_head->val.type = JSON_BOOL;
         ps->json_head->val.value = 1;
+
+        ps->head += 4;
         return SEQUENCE_FOUND;
     }
     if (strncmp(ps->head, "false", 5) == 0) {
         ps->json_head->val.type = JSON_BOOL;
         ps->json_head->val.value = 0;
+
+        ps->head += 5;
         return SEQUENCE_FOUND;
     }
     if (strncmp(ps->head, "null", 4) == 0) {
         ps->json_head->val.type = JSON_NULL;
         ps->json_head->val.value = 0;
+
+        ps->head += 4;
         return SEQUENCE_FOUND;
     }
 
@@ -76,6 +82,9 @@ int parse_number(parser_state *ps) {
     ch[len] = NULL_TERMINATOR;
     ps->json_head->val.value = atof(ch);
     ps->json_head->val.type = JSON_NUM;
+
+    ps->head += len;
+    free(ch);
 
     return SEQUENCE_FOUND;
 }
