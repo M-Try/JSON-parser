@@ -72,7 +72,7 @@ int parse_bool_null(parser_state *ps) {
 }
 
 int parse_number(parser_state *ps) {
-    size_t len = strcspn(ps->head, ",}]");
+    size_t len = strcspn(ps->head, " \t\n\r,}]");
     if (len == NULL) {
         return SEQUENCE_NOT_FOUND;
     }
